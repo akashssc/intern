@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Login from '../components/auth/Login';
 import Signup from '../components/auth/Signup';
+import ProfileView from '../components/profile/ProfileView';
+import ProfileEdit from '../components/profile/ProfileEdit';
 import { useAuth } from '../context/AuthContext';
 
 const Dashboard: React.FC = () => {
@@ -38,18 +40,6 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const Profile: React.FC = () => {
-  const { user } = useAuth();
-  if (!user) return null;
-  return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-2">Profile</h2>
-      <div className="mb-2">Username: <span className="font-semibold">{user.username}</span></div>
-      <div className="mb-2">Email: <span className="font-semibold">{user.email}</span></div>
-    </div>
-  );
-};
-
 const Settings: React.FC = () => (
   <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
     <h2 className="text-2xl font-bold mb-2">Settings</h2>
@@ -62,7 +52,8 @@ const AppRoutes: React.FC = () => (
     <Route path="/" element={<Dashboard />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
-    <Route path="/dashboard/profile" element={<Profile />} />
+    <Route path="/dashboard/profile" element={<ProfileView />} />
+    <Route path="/profile/edit" element={<ProfileEdit />} />
     <Route path="/dashboard/settings" element={<Settings />} />
   </Routes>
 );
