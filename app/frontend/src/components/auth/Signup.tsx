@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authApi } from './api';
 
 const Signup: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -7,9 +8,13 @@ const Signup: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     if (!username || !email || !password || !confirmPassword) {
       setError('All fields are required.');
       return;
@@ -22,14 +27,23 @@ const Signup: React.FC = () => {
       setError('Passwords do not match.');
       return;
     }
-    setError('');
-    // TODO: Call signup API here
+    const { data, status } = await authApi.signup({ username, email, password });
+    if (status === 201) {
+      setSuccess('Signup successful! Redirecting to login...');
+      alert('Signup successful! Please login now.');
+      navigate('/login');
+    } else {
+      setError(data.msg || 'Signup failed');
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-3xl font-bold text-center text-gray-900">Sign Up</h2>
+        <div className="flex flex-col items-center mb-4">
+          <span className="text-4xl font-extrabold text-blue-700 tracking-tight mb-2">intern</span>
+          <span className="text-lg text-gray-600 font-semibold">Create your account</span>
+        </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <input
@@ -62,16 +76,17 @@ const Signup: React.FC = () => {
             />
           </div>
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+          {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            className="w-full py-2 px-4 bg-blue-700 text-white rounded hover:bg-blue-800 transition font-semibold text-lg"
           >
             Sign Up
           </button>
         </form>
         <div className="text-center mt-4">
           <span>Already have an account? </span>
-          <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+          <Link to="/login" className="text-blue-700 hover:underline font-semibold">Login</Link>
         </div>
       </div>
     </div>

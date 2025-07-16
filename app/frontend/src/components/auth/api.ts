@@ -1,21 +1,23 @@
 const API_URL = 'http://localhost:5000';
 
 export const authApi = {
-  login: async (credentials: { email: string; password: string }) => {
-    const response = await fetch(`${API_URL}/auth/login`, {
+  login: async (credentials: { identifier: string; password: string }) => {
+    const response = await fetch(`${API_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ username: credentials.identifier, password: credentials.password }),
     });
-    return response.json();
+    const data = await response.json();
+    return { data, status: response.status };
   },
 
-  signup: async (userData: { email: string; password: string; name: string }) => {
-    const response = await fetch(`${API_URL}/auth/signup`, {
+  signup: async (userData: { username: string; email: string; password: string }) => {
+    const response = await fetch(`${API_URL}/api/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
-    return response.json();
+    const data = await response.json();
+    return { data, status: response.status };
   },
 }; 
