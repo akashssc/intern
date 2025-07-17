@@ -20,13 +20,24 @@ const Login: React.FC = () => {
       return;
     }
     setLoading(true);
-    const result = await login(identifier, password);
-    setLoading(false);
-    if (result.success) {
-      setSuccess('Login successful! Redirecting...');
-      setTimeout(() => navigate('/'), 1000);
-    } else {
-      setError(result.message || 'Login failed');
+    
+    console.log('Attempting login with:', { identifier, password });
+    
+    try {
+      const result = await login(identifier, password);
+      console.log('Login result:', result);
+      
+      if (result.success) {
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => navigate('/'), 1000);
+      } else {
+        setError(result.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
