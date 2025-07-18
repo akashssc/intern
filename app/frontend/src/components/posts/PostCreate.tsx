@@ -11,6 +11,7 @@ const PostCreate: React.FC = () => {
   const [media, setMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState('Public');
   const navigate = useNavigate();
 
   // Load draft from localStorage on mount
@@ -51,7 +52,7 @@ const PostCreate: React.FC = () => {
     // Clear draft on successful preview
     localStorage.removeItem(DRAFT_KEY);
     navigate('/dashboard/preview-post', {
-      state: { title, content, media, previewUrl }
+      state: { title, content, media, previewUrl, visibility }
     });
   };
 
@@ -74,6 +75,18 @@ const PostCreate: React.FC = () => {
               onChange={e => setTitle(e.target.value)}
               placeholder="Enter post title"
             />
+          </div>
+          {/* Visibility */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Visibility</label>
+            <select
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+              value={visibility}
+              onChange={e => setVisibility(e.target.value)}
+            >
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </select>
           </div>
           {/* Content */}
           <div>

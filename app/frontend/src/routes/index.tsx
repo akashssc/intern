@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import PostCreate from '../components/posts/PostCreate';
 import PostList from '../components/posts/PostList';
 import PostPreview from '../components/posts/PostPreview';
+import PostView from '../components/posts/PostView';
 
 const HomeButton: React.FC = () => {
   const { user } = useAuth();
@@ -56,12 +57,25 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const Settings: React.FC = () => (
-  <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
-    <h2 className="text-2xl font-bold mb-2">Settings</h2>
-    <div>Settings options coming soon.</div>
-  </div>
-);
+const Settings: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+  return (
+    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
+      <h2 className="text-2xl font-bold mb-2">Settings</h2>
+      <div className="space-y-4 mt-6">
+        <Link to="/profile/edit" className="block px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 font-semibold">Edit Profile</Link>
+        <Link to="/dashboard/posts" className="block px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 font-semibold">Manage Posts</Link>
+        <button onClick={logout} className="block w-full px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-semibold">Sign Out</button>
+      </div>
+    </div>
+  );
+};
 
 const AppRoutes: React.FC = () => (
   <>
@@ -76,6 +90,7 @@ const AppRoutes: React.FC = () => (
       <Route path="/dashboard/create-post" element={<PostCreate />} />
       <Route path="/dashboard/posts" element={<PostList />} />
       <Route path="/dashboard/preview-post" element={<PostPreview />} />
+      <Route path="/posts/:id" element={<PostView />} />
     </Routes>
   </>
 );
