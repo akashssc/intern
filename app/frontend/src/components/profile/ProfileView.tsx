@@ -25,6 +25,10 @@ const ProfileView: React.FC = () => {
   const [cachedProfile, setCachedProfile] = useState<any>(null);
 
   useEffect(() => {
+    refreshProfile(); // Always fetch the latest profile from the backend on mount
+  }, []);
+
+  useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
@@ -204,7 +208,6 @@ const ProfileView: React.FC = () => {
                 <div className="text-gray-600">{location || <span className="text-gray-400">Empty</span>}</div>
               </div>
               <div className="flex gap-2 mt-2 md:mt-0 items-center">
-                <Link to="/" className="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-900 font-semibold">Home</Link>
                 {profile?.social?.linkedin && <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">LinkedIn</a>}
                 {profile?.social?.github && <a href={profile.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline">GitHub</a>}
                 {profile?.social?.twitter && <a href={profile.social.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>}

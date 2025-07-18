@@ -86,24 +86,24 @@ const ProfileEdit: React.FC = () => {
   // Handler for image upload
   const handleImageUpload = async (file: File) => {
     if (!file) return;
-    setUploading(true);
-    setUploadError(null);
-    try {
-      const result = await profileApi.uploadProfileImage(file);
+      setUploading(true);
+      setUploadError(null);
+      try {
+        const result = await profileApi.uploadProfileImage(file);
       if (result.error) {
         setUploadError(result.error);
-      } else {
+        } else {
         if (result.profile) {
           setProfile(result.profile);
           localStorage.setItem('cachedProfile', JSON.stringify(result.profile));
         }
         setAvatarPreview(null); // Always show the latest avatar from profile after upload
         await refreshProfile();
-      }
-    } catch (err) {
+        }
+      } catch (err) {
       setUploadError('Image upload failed.');
-    } finally {
-      setUploading(false);
+      } finally {
+        setUploading(false);
     }
   };
 
@@ -176,10 +176,10 @@ const ProfileEdit: React.FC = () => {
           <div className="flex flex-col items-center">
             <div className="w-32 h-32 bg-blue-200 rounded-full flex items-center justify-center text-5xl font-bold text-blue-800 overflow-hidden">
               {typeof avatar === 'string' && avatar ? (
-                <img
+                <img 
                   src={`http://localhost:5000/uploads/${avatar}`}
-                  alt="avatar"
-                  className="w-full h-full object-cover"
+                  alt="avatar" 
+                  className="w-full h-full object-cover" 
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               ) : (
@@ -206,7 +206,7 @@ const ProfileEdit: React.FC = () => {
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-blue-900">Username</label>
-              <input name="username" value={formData.username ?? ''} onChange={handleChange} className="w-full input" />
+              <input name="username" value={formData.username ?? ''} onChange={handleChange} className="w-full input" readOnly />
               {errors.username && <div className="text-red-500 text-xs">{errors.username}</div>}
             </div>
             <div>
@@ -221,7 +221,7 @@ const ProfileEdit: React.FC = () => {
             </div>
             <div>
               <label className="block font-semibold text-blue-900">Email</label>
-              <input name="email" value={formData.email ?? ''} onChange={handleChange} className="w-full input" />
+              <input name="email" value={formData.email ?? ''} onChange={handleChange} className="w-full input" readOnly />
               {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
             </div>
             <div>

@@ -49,24 +49,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [profile, setProfile] = useState<Profile | null>(() => {
-    const cachedProfile = localStorage.getItem('cachedProfile');
-    return cachedProfile ? JSON.parse(cachedProfile) : null;
-  });
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   const refreshProfile = async () => {
     if (!token) return;
     try {
       const result = await profileApi.getProfile();
       if (result.profile) {
-        // Merge user fields if missing in profile
-        const mergedProfile = {
-          ...result.profile,
-          username: result.profile.username || user?.username,
-          email: result.profile.email || user?.email,
-        };
-        setProfile(mergedProfile);
-        localStorage.setItem('cachedProfile', JSON.stringify(mergedProfile));
+        setProfile(result.profile);
       }
     } catch (err) {
       console.error('Failed to refresh profile:', err);
@@ -79,7 +69,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await profileApi.updateProfile(profileData);
       if (result.profile) {
         setProfile(result.profile);
-        localStorage.setItem('cachedProfile', JSON.stringify(result.profile));
         return { success: true };
       } else {
         return { success: false, message: result.error || 'Failed to update profile' };
@@ -97,7 +86,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
       // Load profile after login
-      await refreshProfile();
+      const { profile: fetchedProfile } = await profileApi.getProfile();
+      setProfile(fetchedProfile);
       return { success: true };
     } else {
       logout();
@@ -111,7 +101,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setProfile(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    localStorage.removeItem('cachedProfile');
   };
 
   return (

@@ -8,6 +8,7 @@ import os
 import time
 from werkzeug.utils import secure_filename
 from PIL import Image
+from models.post import Post
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -117,3 +118,45 @@ def upload_profile_image():
     print(f"[DEBUG] Uploaded avatar filename: {filename}")
     print(f"[DEBUG] Returned profile: {profile}")
     return jsonify({'url': f'/uploads/{filename}', 'profile': profile}), 200 
+
+@auth_bp.route('/api/debug/all-data', methods=['GET'])
+@jwt_required()
+def debug_all_data():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    # For demo: only allow user with username 'admin' to access
+    if not user or user.username != 'admin':
+        return jsonify({'msg': 'Unauthorized'}), 403
+    users = User.query.all()
+    posts = Post.query.all()
+    return jsonify({
+        'users': [
+            {
+                'id': u.id,
+                'username': u.username,
+                'email': u.email,
+                'title': u.title,
+                'location': u.location,
+                'bio': u.bio,
+                'skills': u.skills,
+                'experience': u.experience,
+                'education': u.education,
+                'phone': u.phone,
+                'linkedin': u.linkedin,
+                'github': u.github,
+                'twitter': u.twitter,
+                'avatar': u.avatar
+            } for u in users
+        ],
+        'posts': [
+            {
+                'id': p.id,
+                'user_id': p.user_id,
+                'title': p.title,
+                'content': p.content,
+                'media_url': p.media_url,
+                'created_at': p.created_at,
+                'updated_at': p.updated_at
+            } for p in posts
+        ]
+    }), 200 

@@ -21,7 +21,8 @@ def allowed_file(filename):
 def get_media_url(filename):
     if not filename:
         return None
-    return url_for('static', filename=f'../uploads/{filename}', _external=True).replace('/static/../', '/uploads/')
+    # Use the correct Flask route for uploads
+    return url_for('uploaded_file', filename=filename, _external=True)
 
 @posts_bp.route('/api/posts', methods=['POST'])
 @jwt_required()
@@ -75,6 +76,24 @@ def get_posts():
             'id': post.id,
             'user_id': post.user_id,
             'username': post.user.username if post.user else None,
+            'title': post.title,
+            'content': post.content,
+            'media_url': get_media_url(post.media_url),
+            'created_at': post.created_at,
+            'updated_at': post.updated_at
+        })
+    return jsonify(result), 200
+
+@posts_bp.route('/api/my-posts', methods=['GET'])
+@jwt_required()
+def get_my_posts():
+    user_id = get_jwt_identity()
+    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
+    result = []
+    for post in posts:
+        result.append({
+            'id': post.id,
+            'user_id': post.user_id,
             'title': post.title,
             'content': post.content,
             'media_url': get_media_url(post.media_url),

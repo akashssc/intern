@@ -67,9 +67,8 @@ def uploaded_file(filename):
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     if not os.path.exists(file_path):
         return jsonify({'error': 'File not found'}), 404
-    
-    # Additional security: only allow image files
-    allowed_extensions = {'.jpg', '.jpeg', '.png', '.thumb.jpg'}
+    # Allow common image and video file types
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.mp4', '.mov', '.avi', '.webm', '.thumb.jpg'}
     file_ext = os.path.splitext(filename.lower())[1]
     if file_ext not in allowed_extensions:
         return jsonify({'error': 'File type not allowed'}), 400
