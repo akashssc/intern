@@ -38,9 +38,11 @@ migrate = Migrate(app, db)
 
 # Register blueprints
 from api.auth import auth_bp
+from api.posts import posts_bp
 # Remove or comment out the following lines if present:
 # from api.profile import profile_bp
 app.register_blueprint(auth_bp)
+app.register_blueprint(posts_bp)
 
 # Set UPLOAD_FOLDER to the backend's uploads directory
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
