@@ -45,7 +45,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div className="flex flex-col items-center mb-4">
-          <span className="text-4xl font-extrabold text-blue-700 tracking-tight mb-2">intern</span>
+          <span className="text-4xl font-extrabold text-blue-700 tracking-tight mb-2">prok</span>
           <span className="text-lg text-gray-600 font-semibold">Sign in to your account</span>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

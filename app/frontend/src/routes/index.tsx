@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-blue-700 p-4 flex items-center justify-between">
-        <span className="text-2xl font-extrabold text-white tracking-tight">intern</span>
+        <span className="text-2xl font-extrabold text-white tracking-tight">prok</span>
         <div className="space-x-4">
           <Link to="/dashboard/settings" className="text-white hover:underline">Settings</Link>
           <button onClick={logout} className="ml-4 px-3 py-1 bg-white text-blue-700 rounded font-semibold hover:bg-blue-100">Sign Out</button>
