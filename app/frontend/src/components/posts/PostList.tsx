@@ -155,16 +155,6 @@ const PostList: React.FC = () => {
     setEditContent(post.content);
     setEditVisibility(post.visibility || 'Public');
   };
-  const handleEditSave = async (postId: number) => {
-    setEditLoading(true);
-    try {
-      const updated = await postsApi.editPost(postId, { title: editTitle, content: editContent, visibility: editVisibility });
-      setPosts(posts => posts.map(p => p.id === postId ? { ...p, title: updated.title, content: updated.content, visibility: updated.visibility } : p));
-      setEditingPostId(null);
-    } finally {
-      setEditLoading(false);
-    }
-  };
 
   const handleLike = async (postId: number) => {
     setLikeLoading(postId);
