@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 export const postsApi = {
   createPost: async ({ title, content, media, category, visibility }: { title: string; content: string; media?: File | null; category?: string; visibility?: string }) => {
