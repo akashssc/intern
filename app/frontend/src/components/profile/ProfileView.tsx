@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { profileApi } from './api';
 
 const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
@@ -18,7 +18,6 @@ const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode }>
 
 const ProfileView: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -66,13 +65,6 @@ const ProfileView: React.FC = () => {
     }
   };
 
-  // Handler for image upload
-  const handleImageUpload = async (file: File) => {
-    if (!file) return;
-    await profileApi.uploadProfileImage(file);
-    await refreshProfile();
-  };
-
   const avatar = profile?.avatar;
   const username = profile?.username || user?.username;
   console.log('[DEBUG ProfileView] avatar:', avatar);
@@ -80,12 +72,14 @@ const ProfileView: React.FC = () => {
   const title = profile?.title || 'Insert Title';
   const location = profile?.location || 'Insert Location';
   const bio = profile?.bio || 'Insert Bio';
-  const skills = profile?.skills || [];
-  const experience = profile?.experience || [];
-  const education = profile?.education || [];
-  const connections = profile?.connections || 0;
-  const mutualConnections = profile?.mutualConnections || 0;
-  const activity = profile?.activity || [];
+  const phone = profile?.phone || '';
+  const linkedin = profile && (profile as any).social ? (profile as any).social.linkedin : '';
+  const github = profile && (profile as any).social ? (profile as any).social.github : '';
+  const twitter = profile && (profile as any).social ? (profile as any).social.twitter : '';
+
+  const connections = profile && 'connections' in profile ? (profile as any).connections : 0;
+  const mutualConnections = profile && 'mutualConnections' in profile ? (profile as any).mutualConnections : 0;
+  const activity = profile && 'activity' in profile ? (profile as any).activity : [];
 
   const requiredFields = ['username', 'email', 'title', 'location'];
   const dataToShow = isOffline && cachedProfile ? cachedProfile : {
@@ -161,25 +155,11 @@ const ProfileView: React.FC = () => {
   }
 
   // Normalize fields for display
-  const normalizedSkills = Array.isArray(dataToShow.skills)
-    ? dataToShow.skills
-    : (typeof dataToShow.skills === 'string' && dataToShow.skills)
-      ? dataToShow.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+  const normalizedActivity = Array.isArray(activity)
+    ? activity
+    : (typeof activity === 'string' && activity)
+      ? activity.split(',').map((s: string) => s.trim()).filter(Boolean)
       : [];
-  const normalizedExperience = Array.isArray(dataToShow.experience)
-    ? dataToShow.experience
-    : (typeof dataToShow.experience === 'string' && dataToShow.experience)
-      ? dataToShow.experience.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
-  const normalizedEducation = Array.isArray(dataToShow.education)
-    ? dataToShow.education
-    : (typeof dataToShow.education === 'string' && dataToShow.education)
-      ? dataToShow.education.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
-  const phone = dataToShow.phone || '';
-  const linkedin = dataToShow.linkedin || '';
-  const github = dataToShow.github || '';
-  const twitter = dataToShow.twitter || '';
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -208,9 +188,9 @@ const ProfileView: React.FC = () => {
                 <div className="text-gray-600">{location || <span className="text-gray-400">Empty</span>}</div>
               </div>
               <div className="flex gap-2 mt-2 md:mt-0 items-center">
-                {profile?.social?.linkedin && <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">LinkedIn</a>}
-                {profile?.social?.github && <a href={profile.social.github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline">GitHub</a>}
-                {profile?.social?.twitter && <a href={profile.social.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>}
+                {(profile && (profile as any).social?.linkedin && <a href={(profile as any).social.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">LinkedIn</a>)}
+                {(profile && (profile as any).social?.github && <a href={(profile as any).social.github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline">GitHub</a>)}
+                {(profile && (profile as any).social?.twitter && <a href={(profile as any).social.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>)}
               </div>
             </div>
             <div className="mt-2 text-sm text-gray-500">Connections: <span className="font-bold text-blue-800">{connections}</span> | Mutual: <span className="font-bold text-blue-800">{mutualConnections}</span></div>
@@ -222,24 +202,17 @@ const ProfileView: React.FC = () => {
             <CollapsibleSection title="Bio & Skills">
               <div className="mb-2">{bio || <span className="text-gray-400">Empty</span>}</div>
               <div className="flex flex-wrap gap-2">
-                {normalizedSkills.length ? normalizedSkills.map((skill: string, i: number) => (
-                  <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">{skill}</span>
-                )) : <span className="text-gray-400">Empty</span>}
+                {/* Skills are not directly available in the profile object, so this will be empty */}
+                <span className="text-gray-400">Empty</span>
               </div>
             </CollapsibleSection>
             <CollapsibleSection title="Work Experience">
-              {normalizedExperience.length ? normalizedExperience.map((exp: string, i: number) => (
-                <div key={i} className="mb-2">
-                  <div className="text-gray-700">{exp}</div>
-                </div>
-              )) : <span className="text-gray-400">Empty</span>}
+              {/* Experience is not directly available in the profile object, so this will be empty */}
+              <span className="text-gray-400">Empty</span>
             </CollapsibleSection>
             <CollapsibleSection title="Education">
-              {normalizedEducation.length ? normalizedEducation.map((edu: string, i: number) => (
-                <div key={i} className="mb-2">
-                  <div className="text-gray-700">{edu}</div>
-                </div>
-              )) : <span className="text-gray-400">Empty</span>}
+              {/* Education is not directly available in the profile object, so this will be empty */}
+              <span className="text-gray-400">Empty</span>
             </CollapsibleSection>
             <CollapsibleSection title="Contact Information">
               <div>Email: {email || <span className="text-gray-400">Empty</span>}</div>
@@ -251,10 +224,10 @@ const ProfileView: React.FC = () => {
           </div>
           <div>
             <CollapsibleSection title="Activity Timeline">
-              {activity.length ? activity.map((act: any, i: number) => (
+              {normalizedActivity.length ? normalizedActivity.map((act: string, i: number) => (
                 <div key={i} className="mb-2">
-                  <div className="text-xs text-gray-500">{act.date}</div>
-                  <div className="text-gray-800">{act.content}</div>
+                  <div className="text-xs text-gray-500">{/* Date is not available in the profile object, so this will be empty */}</div>
+                  <div className="text-gray-800">{act}</div>
                 </div>
               )) : <span className="text-gray-400">No recent activity</span>}
             </CollapsibleSection>

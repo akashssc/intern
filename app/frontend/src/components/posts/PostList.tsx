@@ -70,17 +70,6 @@ const PostList: React.FC = () => {
   const [sharePopupId, setSharePopupId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  // Debounce search and filter inputs
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setDebouncedCategory(category);
-      setDebouncedVisibility(visibility);
-      setDebouncedTag(tag);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [search, category, visibility, tag]);
-
   // Fetch posts with pagination, search, and sort (mocked for now)
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -88,16 +77,13 @@ const PostList: React.FC = () => {
     try {
       const result = await postsApi.getPosts();
       let filtered: Post[] = Array.isArray(result.posts) ? result.posts : [];
-      if (debouncedSearch) {
+      if (search) {
         filtered = filtered.filter(post =>
-          post.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-          post.content?.toLowerCase().includes(debouncedSearch.toLowerCase())
+          post.title?.toLowerCase().includes(search.toLowerCase()) ||
+          post.content?.toLowerCase().includes(search.toLowerCase())
         );
       }
       if (visibilityFilter !== 'All') filtered = filtered.filter(post => post.visibility === visibilityFilter);
-      if (debouncedCategory !== 'All') filtered = filtered.filter(post => post.category === debouncedCategory);
-      if (debouncedVisibility !== 'All') filtered = filtered.filter(post => post.visibility === debouncedVisibility);
-      if (debouncedTag !== 'All') filtered = filtered.filter(post => post.tags?.includes(debouncedTag));
       if (mediaType === 'Images') filtered = filtered.filter(post => post.media_url && post.media_url.match(/\.(jpg|jpeg|png|gif)$/i));
       if (mediaType === 'Videos') filtered = filtered.filter(post => post.media_url && post.media_url.match(/\.(mp4|mov|avi|webm)$/i));
       filtered = filtered.sort((a: Post, b: Post) =>
@@ -113,27 +99,11 @@ const PostList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, sort, page, debouncedCategory, debouncedVisibility, debouncedTag, mediaType, visibilityFilter]);
+  }, [search, sort, page, mediaType, visibilityFilter]);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
-
-  // Infinite scroll: observe last post
-  useEffect(() => {
-    if (loading) return;
-    if (!hasMore) return;
-    if (!lastPostRef.current) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new window.IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        setPage(prev => prev + 1);
-      }
-    });
-    observer.current.observe(lastPostRef.current);
-  }, [loading, hasMore, posts]);
-
-  // Sorting UI - removed unused function
 
   // Filtering UI (search only for now)
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,7 +269,6 @@ const PostList: React.FC = () => {
             : memoizedPosts.map((post: Post, idx: number) => (
                 <div
                   key={post.id}
-                  ref={idx === posts.length - 1 ? lastPostRef : undefined}
                   className="bg-white rounded-lg shadow p-4 flex flex-col h-full transition hover:shadow-lg"
                 >
                   <div className="flex items-center mb-2 justify-between">
