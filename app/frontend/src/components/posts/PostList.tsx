@@ -60,7 +60,6 @@ const PostList: React.FC = () => {
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-  const [editLoading, setEditLoading] = useState(false);
   const [editVisibility, setEditVisibility] = useState('Public');
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
   const [likeLoading, setLikeLoading] = useState<number | null>(null);
@@ -292,14 +291,14 @@ const PostList: React.FC = () => {
                           className="font-semibold text-lg mb-1 border rounded px-2 py-1 w-full"
                           value={editTitle}
                           onChange={e => setEditTitle(e.target.value)}
-                          disabled={editLoading}
+                          disabled={false}
                         />
                         <div className="flex gap-2 text-xs text-gray-500 mb-1">
                           <select
                             className="border rounded px-2 py-1"
                             value={editVisibility}
                             onChange={e => setEditVisibility(e.target.value)}
-                            disabled={editLoading}
+                            disabled={false}
                           >
                             <option value="Public">Public</option>
                             <option value="Private">Private</option>
@@ -324,7 +323,7 @@ const PostList: React.FC = () => {
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
                         rows={4}
-                        disabled={editLoading}
+                        disabled={false}
                       />
                     ) : (
                       <div dangerouslySetInnerHTML={{ __html: post.content }} />
