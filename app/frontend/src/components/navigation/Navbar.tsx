@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
               <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-xl font-bold text-blue-800 overflow-hidden">
                 {typeof avatar === 'string' && avatar ? (
                   <img
-                    src={`http://localhost:5000/uploads/${avatar}`}
+                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${avatar}`}
                     alt="avatar"
                     className="w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
