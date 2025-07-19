@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: prok-frontend
+    env: static
+    buildCommand: cd app/frontend && npm install && npm run build
+    staticPublishPath: app/frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
