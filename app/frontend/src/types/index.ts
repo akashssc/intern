@@ -13,6 +13,14 @@ export interface Profile {
   skills: string[];
   experience: Experience[];
   education: Education[];
+  connections?: any[];
+  mutualConnections?: any[];
+  activity?: any;
+  social?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+  };
 }
 
 export interface Experience {

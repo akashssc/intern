@@ -1,11 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { postsApi } from './api';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaEllipsisV, FaRegHeart, FaHeart, FaRegCommentDots, FaShareAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaEllipsisV, FaRegHeart, FaHeart, FaShareAlt } from 'react-icons/fa';
 
-const CATEGORIES = ['All', 'Tech', 'News', 'Art', 'Science'];
-const VISIBILITY = ['All', 'Public', 'Private'];
-const TAGS = ['All', 'React', 'Python', 'AI', 'Startup'];
 const PAGE_SIZE = 10;
 const MEDIA_TYPES = ['All', 'Images', 'Videos'];
 const VISIBILITY_OPTIONS = ['All', 'Public', 'Private'];
@@ -58,17 +55,7 @@ const PostList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
-  const [category, setCategory] = useState('All');
-  const [visibility, setVisibility] = useState('All');
-  const [tag, setTag] = useState('All');
   const [mediaType, setMediaType] = useState('All');
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastPostRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [debouncedCategory, setDebouncedCategory] = useState(category);
-  const [debouncedVisibility, setDebouncedVisibility] = useState(visibility);
-  const [debouncedTag, setDebouncedTag] = useState(tag);
   const [visibilityFilter, setVisibilityFilter] = useState('All');
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -146,8 +133,7 @@ const PostList: React.FC = () => {
     observer.current.observe(lastPostRef.current);
   }, [loading, hasMore, posts]);
 
-  // Sorting UI
-  const handleSort = (type: 'newest' | 'oldest') => setSort(type);
+  // Sorting UI - removed unused function
 
   // Filtering UI (search only for now)
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
