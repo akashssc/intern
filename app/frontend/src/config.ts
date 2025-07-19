@@ -1,9 +1,13 @@
 // Configuration for API URLs
 const getApiUrl = () => {
-  // In production (Render), use the environment variable
-  if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL || 'https://intern-3ypr.onrender.com';
+  // Check if we're in production by looking at the hostname
+  const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  
+  if (isProduction) {
+    // In production, always use the deployed backend
+    return 'https://intern-3ypr.onrender.com';
   }
+  
   // In development, use localhost
   return 'http://localhost:5000';
 };
