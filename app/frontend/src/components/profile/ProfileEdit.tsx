@@ -27,7 +27,6 @@ const ProfileEdit: React.FC = () => {
   const { user, profile, updateProfile, refreshProfile, setProfile } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ ...initialProfile, ...profile });
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile?.avatar || null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
@@ -59,7 +58,6 @@ const ProfileEdit: React.FC = () => {
       const cached = localStorage.getItem('profile_cache');
       if (cached) {
         setFormData({ ...initialProfile, ...JSON.parse(cached) });
-        setAvatarPreview(JSON.parse(cached).avatar || null);
       }
     }
   }, [isOffline]);
@@ -73,7 +71,6 @@ const ProfileEdit: React.FC = () => {
         username: profile?.username || user?.username || '',
         email: profile?.email || user?.email || '',
       });
-      setAvatarPreview(profile?.avatar || null);
     }
   }, [profile, user]);
 
@@ -97,7 +94,6 @@ const ProfileEdit: React.FC = () => {
           setProfile(result.profile);
           localStorage.setItem('cachedProfile', JSON.stringify(result.profile));
         }
-        setAvatarPreview(null); // Always show the latest avatar from profile after upload
         await refreshProfile();
         }
       } catch (err) {
@@ -194,7 +190,6 @@ const ProfileEdit: React.FC = () => {
                 className="hidden"
                 onChange={e => {
                   if (e.target.files && e.target.files[0]) {
-                    setAvatarPreview(URL.createObjectURL(e.target.files[0]));
                     handleImageUpload(e.target.files[0]);
                   }
                 }}

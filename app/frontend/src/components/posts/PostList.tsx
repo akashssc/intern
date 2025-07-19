@@ -155,11 +155,6 @@ const PostList: React.FC = () => {
     setEditContent(post.content);
     setEditVisibility(post.visibility || 'Public');
   };
-  const handleEditCancel = () => {
-    setEditingPostId(null);
-    setEditTitle('');
-    setEditContent('');
-  };
   const handleEditSave = async (postId: number) => {
     setEditLoading(true);
     try {
