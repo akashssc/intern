@@ -180,10 +180,6 @@ const MyPosts: React.FC = () => {
 
 
 
-  const handleMenuToggle = (postId: number) => {
-    // This function is no longer needed as visibility is removed
-  };
-
   if (error) {
     return <div className="text-center text-red-600 py-8">{error}</div>;
   }

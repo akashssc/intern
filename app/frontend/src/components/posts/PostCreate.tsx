@@ -12,7 +12,6 @@ const PostCreate: React.FC = () => {
   const [media, setMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState('Public');
   const navigate = useNavigate();
 
   // Load draft from localStorage on mount
@@ -53,7 +52,7 @@ const PostCreate: React.FC = () => {
     // Clear draft on successful preview
     localStorage.removeItem(DRAFT_KEY);
     navigate('/dashboard/preview-post', {
-      state: { title, content, media, previewUrl, visibility }
+      state: { title, content, media, previewUrl }
     });
   };
 
