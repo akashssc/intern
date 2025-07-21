@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 import re
 import sys
-from flask.cli import main
+from flask_cors import CORS
+CORS(app, origins=[
+    "https://prok-frontend-w13h.onrender.com",
+    "http://localhost:5173"
+])
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     sys.exit(main())

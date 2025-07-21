@@ -12,4 +12,4 @@ const getApiUrl = () => {
   return 'http://localhost:5000';
 };
 
-export const API_URL = getApiUrl(); 
+export const API_URL = "https://intern-3ypr.onrender.com/api";
