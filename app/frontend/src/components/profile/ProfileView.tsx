@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import PersistentNav from '../navigation/PersistentNav';
 
 const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const [open, setOpen] = useState(true);
   return (
     <div className="mb-4">
-      <button className="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-2 rounded-t font-semibold" onClick={() => setOpen(o => !o)}>
-        <span>{title}</span>
-        <span>{open ? '-' : '+'}</span>
+      <button className="w-full flex justify-between items-center px-4 py-2 rounded-t font-semibold transition-colors" style={{ backgroundColor: '#09D0EF' }} onClick={() => setOpen(o => !o)}>
+        <span className="text-black">{title}</span>
+        <span className="text-black">{open ? '-' : '+'}</span>
       </button>
-      {open && <div className="border border-blue-800 border-t-0 rounded-b bg-white p-4">{children}</div>}
+      {open && <div className="border border-gray-300 border-t-0 rounded-b bg-white p-4">{children}</div>}
     </div>
   );
 };
@@ -91,65 +92,73 @@ const ProfileView: React.FC = () => {
   if (isOffline) {
     if (!cachedProfile) {
       return (
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <div className="text-gray-700 mb-4">You are offline. No cached profile data available.</div>
+        <PersistentNav>
+          <div className="max-w-4xl mx-auto p-4">
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <div className="text-gray-700 mb-4">You are offline. No cached profile data available.</div>
+            </div>
           </div>
-        </div>
+        </PersistentNav>
       );
     }
   }
 
   if (isProfileIncomplete) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <div className="text-gray-700 mb-4">
-            Your profile is incomplete. Please fill in all required fields.
+      <PersistentNav>
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <div className="text-gray-700 mb-4">
+              Your profile is incomplete. Please fill in all required fields.
+            </div>
+            <Link to="/profile/edit" className="px-4 py-2 text-white rounded transition-colors font-semibold" style={{ backgroundColor: '#09D0EF' }}>
+              Complete Profile
+            </Link>
           </div>
-          <Link to="/profile/edit" className="btn btn-primary">
-            Complete Profile
-          </Link>
         </div>
-      </div>
+      </PersistentNav>
     );
   }
 
   if (!dataToShow) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-center">
-            <div className="text-gray-600">No profile data available</div>
-            <button
+      <PersistentNav>
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-center">
+              <div className="text-gray-600">No profile data available</div>
+                          <button
               onClick={handleRefresh}
               disabled={loading}
-              className="px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 text-white rounded disabled:opacity-50 transition-colors bg-gray-500 hover:bg-gray-600"
             >
               {loading ? 'Loading...' : 'Load Profile'}
             </button>
+            </div>
           </div>
         </div>
-      </div>
+      </PersistentNav>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-red-600 text-center mb-4">{error}</div>
-          <div className="text-center">
-            <button
+      <PersistentNav>
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-red-600 text-center mb-4">{error}</div>
+            <div className="text-center">
+                          <button
               onClick={handleRefresh}
               disabled={loading}
-              className="px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 text-white rounded disabled:opacity-50 transition-colors bg-gray-500 hover:bg-gray-600"
             >
               {loading ? 'Loading...' : 'Retry'}
             </button>
+            </div>
           </div>
         </div>
-      </div>
+      </PersistentNav>
     );
   }
 
@@ -161,41 +170,43 @@ const ProfileView: React.FC = () => {
       : [];
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {isOffline && <div className="mb-2 text-yellow-700 bg-yellow-100 p-2 rounded text-center">You are offline. Showing cached profile data.</div>}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 bg-blue-200 rounded-full flex items-center justify-center text-5xl font-bold text-blue-800 overflow-hidden">
-              {typeof avatar === 'string' && avatar ? (
-                <img
-                  src={`${window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://intern-3ypr.onrender.com' : 'http://localhost:5000'}/uploads/${avatar}`}
-                  alt="avatar"
-                  className="w-full h-full object-cover"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              ) : (
-                (username?.[0]?.toUpperCase() || '?')
-              )}
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
-              <div>
-                <h1 className="text-3xl font-bold text-blue-900">{username || <span className="text-gray-400">Empty</span>}</h1>
-                <div className="text-blue-700 font-semibold">{title || <span className="text-gray-400">Empty</span>}</div>
-                <div className="text-gray-600">{location || <span className="text-gray-400">Empty</span>}</div>
-              </div>
-              <div className="flex gap-2 mt-2 md:mt-0 items-center">
-                {(profile && (profile as any).social?.linkedin && <a href={(profile as any).social.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">LinkedIn</a>)}
-                {(profile && (profile as any).social?.github && <a href={(profile as any).social.github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline">GitHub</a>)}
-                {(profile && (profile as any).social?.twitter && <a href={(profile as any).social.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Twitter</a>)}
+    <PersistentNav>
+      <div className="max-w-4xl mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4 text-black">View/Edit Profile</h1>
+        {isOffline && <div className="mb-2 text-yellow-700 bg-yellow-100 p-2 rounded text-center">You are offline. Showing cached profile data.</div>}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold text-black overflow-hidden" style={{ backgroundColor: '#09D0EF' }}>
+                {typeof avatar === 'string' && avatar ? (
+                  <img
+                    src={`${window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://intern-3ypr.onrender.com' : 'http://localhost:5000'}/uploads/${avatar}`}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  (username?.[0]?.toUpperCase() || '?')
+                )}
               </div>
             </div>
-            <div className="mt-2 text-sm text-gray-500">Connections: <span className="font-bold text-blue-800">{connections}</span> | Mutual: <span className="font-bold text-blue-800">{mutualConnections}</span></div>
-            <Link to="/profile/edit" className="inline-block mt-2 px-4 py-1 bg-blue-800 text-white rounded hover:bg-blue-900 font-semibold">Edit Profile</Link>
+            <div className="flex-1 w-full">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+                <div>
+                  <h1 className="text-3xl font-bold text-black">{username || <span className="text-gray-400">Empty</span>}</h1>
+                  <div className="text-black font-semibold">{title || <span className="text-gray-400">Empty</span>}</div>
+                  <div className="text-gray-600">{location || <span className="text-gray-400">Empty</span>}</div>
+                </div>
+                <div className="flex gap-2 mt-2 md:mt-0 items-center">
+                  {(profile && (profile as any).social?.linkedin && <a href={(profile as any).social.linkedin} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">LinkedIn</a>)}
+                  {(profile && (profile as any).social?.github && <a href={(profile as any).social.github} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">GitHub</a>)}
+                  {(profile && (profile as any).social?.twitter && <a href={(profile as any).social.twitter} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">Twitter</a>)}
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-500">Connections: <span className="font-bold text-black">{connections}</span> | Mutual: <span className="font-bold text-black">{mutualConnections}</span></div>
+              <Link to="/profile/edit" className="inline-block mt-2 px-4 py-1 text-black rounded transition-colors font-semibold" style={{ backgroundColor: '#09D0EF' }}>Edit Profile</Link>
+            </div>
           </div>
-        </div>
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <CollapsibleSection title="Bio & Skills">
@@ -216,9 +227,9 @@ const ProfileView: React.FC = () => {
             <CollapsibleSection title="Contact Information">
               <div>Email: {email || <span className="text-gray-400">Empty</span>}</div>
               <div>Phone: {phone ? phone : <span className="text-gray-400">Empty</span>}</div>
-              <div>LinkedIn: {linkedin ? <a href={linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">{linkedin}</a> : <span className="text-gray-400">Empty</span>}</div>
-              <div>GitHub: {github ? <a href={github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline">{github}</a> : <span className="text-gray-400">Empty</span>}</div>
-              <div>Twitter: {twitter ? <a href={twitter} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{twitter}</a> : <span className="text-gray-400">Empty</span>}</div>
+              <div>LinkedIn: {linkedin ? <a href={linkedin} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">{linkedin}</a> : <span className="text-gray-400">Empty</span>}</div>
+              <div>GitHub: {github ? <a href={github} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">{github}</a> : <span className="text-gray-400">Empty</span>}</div>
+              <div>Twitter: {twitter ? <a href={twitter} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">{twitter}</a> : <span className="text-gray-400">Empty</span>}</div>
             </CollapsibleSection>
           </div>
           <div>
@@ -232,8 +243,9 @@ const ProfileView: React.FC = () => {
             </CollapsibleSection>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </PersistentNav>
   );
 };
 

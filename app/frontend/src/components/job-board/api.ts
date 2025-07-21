@@ -7,7 +7,19 @@ export const jobsApi = {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    return response.json();
+    const data = await response.json();
+    
+    // Handle token expiration
+    if (response.status === 401 || (data.msg && data.msg.toLowerCase().includes('token'))) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('profile_cache');
+      window.location.href = '/login';
+      return { error: 'Token expired. Please login again.' };
+    }
+    
+    return data;
   },
 
   getJob: async (jobId: number) => {
@@ -16,7 +28,19 @@ export const jobsApi = {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    return response.json();
+    const data = await response.json();
+    
+    // Handle token expiration
+    if (response.status === 401 || (data.msg && data.msg.toLowerCase().includes('token'))) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('profile_cache');
+      window.location.href = '/login';
+      return { error: 'Token expired. Please login again.' };
+    }
+    
+    return data;
   },
 
   applyForJob: async (jobId: number) => {
@@ -26,6 +50,18 @@ export const jobsApi = {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    return response.json();
+    const data = await response.json();
+    
+    // Handle token expiration
+    if (response.status === 401 || (data.msg && data.msg.toLowerCase().includes('token'))) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('profile_cache');
+      window.location.href = '/login';
+      return { error: 'Token expired. Please login again.' };
+    }
+    
+    return data;
   },
 }; 

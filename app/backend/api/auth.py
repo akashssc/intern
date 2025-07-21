@@ -119,6 +119,22 @@ def upload_profile_image():
     print(f"[DEBUG] Returned profile: {profile}")
     return jsonify({'url': f'/uploads/{filename}', 'profile': profile}), 200 
 
+@auth_bp.route('/api/profile/image', methods=['DELETE'])
+@jwt_required()
+def delete_profile_image():
+    user = get_user()
+    if not user:
+        return jsonify({'msg': 'User not found'}), 404
+    if user.avatar:
+        # Remove the file from uploads
+        upload_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
+        file_path = os.path.join(upload_folder, user.avatar)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        user.avatar = None
+        db.session.commit()
+    return jsonify({'success': True}), 200
+
 @auth_bp.route('/api/debug/all-data', methods=['GET'])
 @jwt_required()
 def debug_all_data():
@@ -160,3 +176,20 @@ def debug_all_data():
             } for p in posts
         ]
     }), 200 
+
+@auth_bp.route('/api/users', methods=['GET'])
+@jwt_required()
+def get_all_users():
+    current_user_id = get_jwt_identity()
+    users = User.query.filter(User.id != current_user_id).all()
+    result = []
+    for user in users:
+        result.append({
+            'id': user.id,
+            'username': user.username,
+            'title': user.title,
+            'location': user.location,
+            'avatar': user.avatar,
+            'bio': user.bio,
+        })
+    return jsonify({'users': result}), 200 

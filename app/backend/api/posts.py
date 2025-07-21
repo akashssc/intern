@@ -67,6 +67,7 @@ def create_post():
 
     title = request.form.get('title', '').strip()
     content = request.form.get('content', '').strip()
+    visibility = request.form.get('visibility', 'Public').strip() if 'visibility' in request.form else 'Public'
     if not title or not content:
         return jsonify({'msg': 'Title and content are required.'}), 400
 
@@ -85,7 +86,7 @@ def create_post():
         elif file.filename:
             return jsonify({'msg': 'Invalid media file type.'}), 400
 
-    post = Post(user_id=user.id, title=title, content=content, media_url=media_url)
+    post = Post(user_id=user.id, title=title, content=content, media_url=media_url, visibility=visibility)
     db.session.add(post)
     db.session.commit()
     invalidate_post_cache()
@@ -96,6 +97,7 @@ def create_post():
         'title': post.title,
         'content': post.content,
         'media_url': get_media_url(post.media_url),
+        'visibility': post.visibility,
         'created_at': post.created_at,
         'updated_at': post.updated_at
     }), 201
@@ -107,17 +109,17 @@ def get_posts():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
     category = request.args.get('category')
-    visibility = request.args.get('visibility')
     search = request.args.get('search')
     tags = request.args.get('tags')  # comma-separated
     sort_by = request.args.get('sort_by', 'created_at')
     sort_order = request.args.get('sort_order', 'desc')
+    exclude_user_id = request.args.get('exclude_user_id')
 
     query = Post.query
     if category:
         query = query.filter(Post.category == category)
-    if visibility:
-        query = query.filter(Post.visibility == visibility)
+    if exclude_user_id:
+        query = query.filter(Post.user_id != int(exclude_user_id))
     if search:
         like = f"%{search.lower()}%"
         query = query.filter(or_(Post.title.ilike(like), Post.content.ilike(like)))
@@ -271,3 +273,16 @@ def edit_post(post_id):
         'created_at': post.created_at,
         'updated_at': post.updated_at
     }), 200 
+
+# --- STUB CONNECTION ENDPOINTS FOR FRONTEND TESTING ---
+@posts_bp.route('/api/connections/status/<int:user_id>', methods=['GET'])
+@jwt_required()
+def connection_status(user_id):
+    # Always return 'none' for demo
+    return jsonify({'status': 'none'}), 200
+
+@posts_bp.route('/api/connections/request', methods=['POST'])
+@jwt_required()
+def send_connection_request():
+    # Always return success for demo
+    return jsonify({'success': True, 'msg': 'Request sent (stub, not implemented)'}), 200 

@@ -7,10 +7,15 @@ import ProfileEdit from '../components/profile/ProfileEdit';
 import { useAuth } from '../context/AuthContext';
 import PostCreate from '../components/posts/PostCreate';
 import PostList from '../components/posts/PostList';
+import MyPosts from '../components/posts/MyPosts';
 import PostPreview from '../components/posts/PostPreview';
 import PostView from '../components/posts/PostView';
 import MessageList from '../components/messaging/MessageList';
-
+import FindPeople from '../components/people/FindPeople';
+import PersistentNav from '../components/navigation/PersistentNav';
+import Network from '../components/navigation/Network';
+import NotificationPage from '../components/navigation/NotificationPage';
+import JobList from '../components/job-board/JobList';
 
 
 const Dashboard: React.FC = () => {
@@ -26,20 +31,22 @@ const Dashboard: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-blue-700 p-4 flex items-center justify-between">
-        <span className="text-2xl font-extrabold text-white tracking-tight">prok</span>
-        <div className="space-x-4">
-          <Link to="/messages" className="text-white hover:underline">Messages</Link>
-        </div>
-      </nav>
-      <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow">
-        <h1 className="text-3xl font-bold mb-4">Welcome, {user.username}!</h1>
-        <p className="text-gray-600">Your professional networking dashboard</p>
+    <PersistentNav>
+      <div className="max-w-4xl mx-auto p-4">
+        <PostList />
       </div>
-    </div>
+    </PersistentNav>
   );
 };
+
+const ComingSoon: React.FC<{ title: string }> = ({ title }) => (
+  <PersistentNav>
+    <div className="max-w-xl mx-auto p-8 text-center">
+      <div className="text-3xl font-bold mb-4 text-gray-700">{title}</div>
+      <div className="text-lg text-gray-500">Coming soon, the app is under development.</div>
+    </div>
+  </PersistentNav>
+);
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
@@ -50,16 +57,44 @@ const Settings: React.FC = () => {
     }
   }, [user, navigate]);
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-2">Settings</h2>
-      <div className="space-y-4 mt-6">
-        <Link to="/profile/edit" className="block px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 font-semibold">Edit Profile</Link>
-        <Link to="/dashboard/posts" className="block px-4 py-2 bg-blue-100 rounded hover:bg-blue-200 font-semibold">Manage Posts</Link>
-        <button onClick={logout} className="block w-full px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-semibold">Sign Out</button>
+    <PersistentNav>
+      <div className="max-w-xl mx-auto p-4">
+        <div className="bg-white rounded-lg shadow mb-4 border border-gray-300">
+          <div className="p-4 border-b border-gray-300">
+            <h2 className="text-xl font-semibold text-black">Settings</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <Link to="/dashboard/profile" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">View/Edit Profile</Link>
+            <Link to="/settings/language" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Language</Link>
+            <Link to="/settings/password-security" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Password & Security</Link>
+            <Link to="/settings/privacy" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Privacy</Link>
+            <Link to="/settings/accessibility" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Accessibility</Link>
+            <Link to="/settings/permissions" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Permissions</Link>
+            <Link to="/settings/theme" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Theme</Link>
+            <Link to="/settings/help" className="block px-4 py-2 text-black hover:bg-opacity-10 hover:bg-cyan-500 rounded transition-colors font-semibold">Help</Link>
+            <button onClick={logout} className="block w-full px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded transition-colors font-semibold">Sign Out</button>
+            <a
+              href="mailto:akashssc04@gmail.com?subject=Prok%20App%20Feedback"
+              className="block w-full px-4 py-2 mt-2 text-white bg-cyan-500 hover:bg-cyan-600 rounded transition-colors font-semibold text-center"
+              style={{ textDecoration: 'none' }}
+            >
+              Feedback
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
+    </PersistentNav>
   );
 };
+
+const SearchComingSoon: React.FC = () => (
+  <PersistentNav>
+    <div className="max-w-xl mx-auto p-8 text-center">
+      <div className="text-3xl font-bold mb-4 text-gray-700">Search option coming soon</div>
+      <div className="text-lg text-gray-500">It is not yet developed.</div>
+    </div>
+  </PersistentNav>
+);
 
 const AppRoutes: React.FC = () => (
   <>
@@ -71,10 +106,22 @@ const AppRoutes: React.FC = () => (
       <Route path="/profile/edit" element={<ProfileEdit />} />
       <Route path="/dashboard/settings" element={<Settings />} />
       <Route path="/dashboard/create-post" element={<PostCreate />} />
-      <Route path="/dashboard/posts" element={<PostList />} />
+      <Route path="/dashboard/posts" element={<MyPosts />} />
       <Route path="/dashboard/preview-post" element={<PostPreview />} />
       <Route path="/posts/:id" element={<PostView />} />
       <Route path="/messages" element={<MessageList />} />
+      <Route path="/find-people" element={<FindPeople />} />
+      <Route path="/network" element={<Network />} />
+      <Route path="/jobs" element={<JobList />} />
+      <Route path="/notifications" element={<NotificationPage />} />
+      <Route path="/search-coming-soon" element={<SearchComingSoon />} />
+      <Route path="/settings/language" element={<ComingSoon title="Language Options" />} />
+      <Route path="/settings/password-security" element={<ComingSoon title="Password & Security" />} />
+      <Route path="/settings/privacy" element={<ComingSoon title="Privacy" />} />
+      <Route path="/settings/accessibility" element={<ComingSoon title="Accessibility" />} />
+      <Route path="/settings/permissions" element={<ComingSoon title="Permissions" />} />
+      <Route path="/settings/theme" element={<ComingSoon title="Theme" />} />
+      <Route path="/settings/help" element={<ComingSoon title="Help" />} />
     </Routes>
   </>
 );

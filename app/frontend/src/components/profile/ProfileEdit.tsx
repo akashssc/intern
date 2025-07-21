@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { profileApi } from './api';
+import PersistentNav from '../navigation/PersistentNav';
 
 const initialProfile = {
   avatar: '',
@@ -17,14 +18,14 @@ const initialProfile = {
   phone: '',
   linkedin: '',
   github: '',
-  twitter: '',
+  twitter: ''
 };
 
 const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 const validatePhone = (phone: string) => /^\+?\d{7,15}$/.test(phone);
 
 const ProfileEdit: React.FC = () => {
-  const { user, profile, updateProfile, refreshProfile, setProfile } = useAuth();
+  const { user, profile, refreshProfile, setProfile } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ ...initialProfile, ...profile });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -132,8 +133,27 @@ const ProfileEdit: React.FC = () => {
     
     setSubmitting(true);
     try {
-      const result = await updateProfile(formData);
-      if (result.success) {
+      // Prepare the data to send to the API
+      const profileData = {
+        username: formData.username,
+        title: formData.title,
+        location: formData.location,
+        bio: formData.bio,
+        skills: formData.skills,
+        experience: formData.experience,
+        education: formData.education,
+        phone: formData.phone,
+        linkedin: formData.linkedin,
+        github: formData.github,
+        twitter: formData.twitter
+      };
+      
+      console.log('Sending profile data:', profileData);
+      
+      const result = await profileApi.updateProfile(profileData);
+      console.log('Profile update result:', result);
+      
+      if (!result.error && result.profile) {
         setSuccess('Profile updated successfully!');
         setShowPopup(true);
         setPopupMessage('Profile updated successfully!');
@@ -143,11 +163,20 @@ const ProfileEdit: React.FC = () => {
           navigate('/dashboard/profile');
         }, 1500);
       } else {
-        setErrors({ general: result.message || 'Failed to update profile' });
-        setShowPopup(true);
-        setPopupMessage(result.message || 'Failed to update profile');
+        // Check if it's a token expiration error
+        if (result.error && result.error.toLowerCase().includes('token')) {
+          setErrors({ general: 'Session expired. Redirecting to login...' });
+          setShowPopup(true);
+          setPopupMessage('Session expired. Redirecting to login...');
+          // The API will handle the redirect automatically
+        } else {
+          setErrors({ general: result.error || 'Failed to update profile' });
+          setShowPopup(true);
+          setPopupMessage(result.error || 'Failed to update profile');
+        }
       }
     } catch (err) {
+      console.error('Profile update error:', err);
       setErrors({ general: 'Network error. Please try again.' });
       setShowPopup(true);
       setPopupMessage('Network error. Please try again.');
@@ -157,20 +186,22 @@ const ProfileEdit: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {isOffline && (
-        <div className="mb-2 text-yellow-700 bg-yellow-100 p-2 rounded text-center">You are offline. Editing is disabled. Showing cached profile data.</div>
-      )}
-      {showPopup && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
-          {popupMessage}
-        </div>
-      )}
-      <form className="bg-white rounded-lg shadow p-6" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-bold mb-4 text-blue-900">Edit Profile</h1>
+    <PersistentNav>
+      <div className="max-w-4xl mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4 text-black">Edit Profile</h1>
+        {isOffline && (
+          <div className="mb-2 text-yellow-700 bg-yellow-100 p-2 rounded text-center">You are offline. Editing is disabled. Showing cached profile data.</div>
+        )}
+        {showPopup && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50">
+            {popupMessage}
+          </div>
+        )}
+        <form className="bg-white rounded-lg shadow p-6" onSubmit={handleSubmit}>
+          <h1 className="text-2xl font-bold mb-4 text-black">Edit Profile</h1>
         <div className="flex flex-col md:flex-row gap-6 mb-6">
           <div className="flex flex-col items-center">
-            <div className="w-32 h-32 bg-blue-200 rounded-full flex items-center justify-center text-5xl font-bold text-blue-800 overflow-hidden">
+            <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold text-black overflow-hidden" style={{ backgroundColor: '#09D0EF' }}>
               {typeof avatar === 'string' && avatar ? (
                 <img 
                   src={`${window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://intern-3ypr.onrender.com' : 'http://localhost:5000'}/uploads/${avatar}`}
@@ -182,88 +213,115 @@ const ProfileEdit: React.FC = () => {
                 username?.[0]?.toUpperCase() || '?'
               )}
             </div>
-            <label className="mt-2 cursor-pointer text-blue-700 font-semibold hover:underline block text-center">
-              Change Photo
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleImageUpload(e.target.files[0]);
-                  }
+            <div className="mt-2 flex flex-col space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = (e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.files && target.files[0]) {
+                      handleImageUpload(target.files[0]);
+                    }
+                  };
+                  input.click();
                 }}
-              />
-            </label>
-            {uploading && <div className="text-blue-600 text-xs mt-1">Uploading...</div>}
+                className="text-black font-semibold hover:underline block text-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              >
+                Change Profile Photo
+              </button>
+              {avatar && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const result = await profileApi.deleteProfileImage();
+                      if (result.success) {
+                        setFormData(prev => ({ ...prev, avatar: '' }));
+                        await refreshProfile();
+                      }
+                    } catch (err) {
+                      console.error('Failed to delete profile image:', err);
+                    }
+                  }}
+                  className="text-red-600 font-semibold hover:text-red-800 px-3 py-1 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                >
+                  Delete Photo
+                </button>
+              )}
+            </div>
+            {uploading && <div className="text-black text-xs mt-1">Uploading...</div>}
             {uploadError && <div className="text-red-500 text-xs mt-1">{uploadError}</div>}
           </div>
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-blue-900">Username</label>
+              <label className="block font-semibold text-black">Username</label>
               <input name="username" value={formData.username ?? ''} onChange={handleChange} className="w-full input" readOnly />
               {errors.username && <div className="text-red-500 text-xs">{errors.username}</div>}
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">Title</label>
+              <label className="block font-semibold text-black">Title</label>
               <input name="title" value={formData.title ?? ''} onChange={handleChange} className="w-full input" />
               {errors.title && <div className="text-red-500 text-xs">{errors.title}</div>}
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">Location</label>
+              <label className="block font-semibold text-black">Location</label>
               <input name="location" value={formData.location ?? ''} onChange={handleChange} className="w-full input" />
               {errors.location && <div className="text-red-500 text-xs">{errors.location}</div>}
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">Email</label>
+              <label className="block font-semibold text-black">Email</label>
               <input name="email" value={formData.email ?? ''} onChange={handleChange} className="w-full input" readOnly />
               {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">Phone</label>
+              <label className="block font-semibold text-black">Phone</label>
               <input name="phone" value={formData.phone ?? ''} onChange={handleChange} className="w-full input" />
               {errors.phone && <div className="text-red-500 text-xs">{errors.phone}</div>}
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">LinkedIn</label>
+              <label className="block font-semibold text-black">LinkedIn</label>
               <input name="linkedin" value={formData.linkedin ?? ''} onChange={handleChange} className="w-full input" />
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">GitHub</label>
+              <label className="block font-semibold text-black">GitHub</label>
               <input name="github" value={formData.github ?? ''} onChange={handleChange} className="w-full input" />
             </div>
             <div>
-              <label className="block font-semibold text-blue-900">Twitter</label>
+              <label className="block font-semibold text-black">Twitter</label>
               <input name="twitter" value={formData.twitter ?? ''} onChange={handleChange} className="w-full input" />
             </div>
           </div>
         </div>
         <div className="mb-4">
-          <label className="block font-semibold text-blue-900">Bio</label>
+          <label className="block font-semibold text-black">Bio</label>
           <textarea name="bio" value={formData.bio ?? ''} onChange={handleChange} className="w-full input" rows={3} />
         </div>
         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block font-semibold text-blue-900">Skills (comma separated)</label>
+            <label className="block font-semibold text-black">Skills (comma separated)</label>
             <input name="skills" value={formData.skills ?? ''} onChange={handleChange} className="w-full input" />
           </div>
           <div>
-            <label className="block font-semibold text-blue-900">Experience</label>
+            <label className="block font-semibold text-black">Experience</label>
             <input name="experience" value={formData.experience ?? ''} onChange={handleChange} className="w-full input" placeholder="e.g. Frontend Developer at Tech Corp (2022-2024)" />
           </div>
           <div>
-            <label className="block font-semibold text-blue-900">Education</label>
+            <label className="block font-semibold text-black">Education</label>
             <input name="education" value={formData.education ?? ''} onChange={handleChange} className="w-full input" placeholder="e.g. B.Tech at ABC University (2018-2022)" />
           </div>
         </div>
         <div className="flex justify-end gap-4 mt-6">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/dashboard/profile')}>Cancel</button>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
+          <button type="button" className="px-4 py-2 text-white rounded transition-colors bg-gray-500 hover:bg-gray-600" onClick={() => navigate('/dashboard/profile')}>Cancel</button>
+          <button type="submit" className="px-4 py-2 text-black rounded transition-colors" style={{ backgroundColor: '#09D0EF' }} disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</button>
         </div>
         {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
         {errors.general && <div className="text-red-500 text-sm mt-2">{errors.general}</div>}
       </form>
     </div>
+    </PersistentNav>
   );
 };
 

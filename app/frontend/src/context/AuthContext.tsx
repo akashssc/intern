@@ -101,6 +101,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setProfile(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('profile_cache');
+    // Navigate to login page
+    window.location.href = '/login';
   };
 
   return (

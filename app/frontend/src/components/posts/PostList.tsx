@@ -1,13 +1,8 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { postsApi } from './api';
-import { Link } from 'react-router-dom';
-import { FaEllipsisV, FaRegHeart, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import { FaRegHeart, FaHeart, FaRegComment, FaShareAlt } from 'react-icons/fa';
 
-const PAGE_SIZE = 10;
-const MEDIA_TYPES = ['All', 'Images', 'Videos'];
-const VISIBILITY_OPTIONS = ['All', 'Public', 'Private'];
-
-// Add a Post type for clarity
 interface Post {
   id: number;
   user_id: number;
@@ -15,413 +10,207 @@ interface Post {
   title: string;
   content: string;
   media_url?: string;
-  category?: string;
-  visibility?: string;
-  tags?: string[];
   created_at: string;
   updated_at: string;
-  likes_count?: number;
-  comments_count?: number;
 }
 
-// Error Boundary
-class PostListErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  render() {
-    if (this.state.hasError) return <div className="text-center text-red-600 py-8">Something went wrong loading posts.</div>;
-    return this.props.children;
-  }
+interface LocalComment {
+  postId: number;
+  username: string;
+  content: string;
+  createdAt: string;
 }
-
-const SkeletonCard = () => (
-  <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full animate-pulse">
-    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-    <div className="h-3 bg-gray-200 rounded w-1/4 mb-2" />
-    <div className="h-6 bg-gray-200 rounded w-2/3 mb-3" />
-    <div className="h-32 bg-gray-200 rounded w-full mb-2" />
-    <div className="h-3 bg-gray-200 rounded w-1/2" />
-  </div>
-);
 
 const PostList: React.FC = () => {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
-  const [mediaType, setMediaType] = useState('All');
-  const [visibilityFilter, setVisibilityFilter] = useState('All');
-  const [editingPostId, setEditingPostId] = useState<number | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editContent, setEditContent] = useState('');
-  const [editVisibility, setEditVisibility] = useState('Public');
-  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
-  const [likeLoading, setLikeLoading] = useState<number | null>(null);
-  const [likedPosts, setLikedPosts] = useState<{ [key: number]: boolean }>({});
-  const [commentInputs, setCommentInputs] = useState<{ [key: number]: string }>({});
-  const [comments, setComments] = useState<{ [key: number]: string[] }>({});
-  const [sharePopupId, setSharePopupId] = useState<number | null>(null);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
-
-  // Fetch posts with pagination, search, and sort (mocked for now)
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await postsApi.getPosts();
-      let filtered: Post[] = Array.isArray(result.posts) ? result.posts : [];
-      if (search) {
-        filtered = filtered.filter(post =>
-          post.title?.toLowerCase().includes(search.toLowerCase()) ||
-          post.content?.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      if (visibilityFilter !== 'All') filtered = filtered.filter(post => post.visibility === visibilityFilter);
-      if (mediaType === 'Images') filtered = filtered.filter(post => post.media_url && post.media_url.match(/\.(jpg|jpeg|png|gif)$/i));
-      if (mediaType === 'Videos') filtered = filtered.filter(post => post.media_url && post.media_url.match(/\.(mp4|mov|avi|webm)$/i));
-      filtered = filtered.sort((a: Post, b: Post) =>
-        sort === 'newest'
-          ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-      const paged = filtered.slice(0, page * PAGE_SIZE);
-      setPosts(paged);
-      setHasMore(paged.length < filtered.length);
-    } catch (err) {
-      setError('An error occurred while fetching posts.');
-    } finally {
-      setLoading(false);
-    }
-  }, [search, sort, page, mediaType, visibilityFilter]);
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [liked, setLiked] = useState<{ [postId: number]: boolean }>({});
+  const [likeCounts, setLikeCounts] = useState<{ [postId: number]: number }>({});
+  const [showCommentBox, setShowCommentBox] = useState<{ [postId: number]: boolean }>({});
+  const [commentInputs, setCommentInputs] = useState<{ [postId: number]: string }>({});
+  const [comments, setComments] = useState<{ [postId: number]: LocalComment[] }>({});
+  const [sharePostId, setSharePostId] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
-  // Filtering UI (search only for now)
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setPage(1);
-  };
-
-  // Lazy load images using Intersection Observer
-  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
-  useEffect(() => {
-    if (!imageRefs.current.length) return;
-    const imgObserver = new window.IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target as HTMLImageElement;
-          if (img.dataset.src) {
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
-          }
-          imgObserver.unobserve(img);
+    const fetchPosts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await postsApi.getPosts(user?.id);
+        if (result.error) {
+          setError(result.error);
+          setPosts([]);
+        } else {
+          setPosts(Array.isArray(result.posts) ? result.posts : []);
+          // Initialize like counts and liked state
+          const initialLikes: { [postId: number]: boolean } = {};
+          const initialCounts: { [postId: number]: number } = {};
+          (result.posts || []).forEach((post: any) => {
+            initialLikes[post.id] = false;
+            initialCounts[post.id] = post.likes_count || 0;
+          });
+          setLiked(initialLikes);
+          setLikeCounts(initialCounts);
         }
-      });
-    });
-    imageRefs.current.forEach(img => {
-      if (img && img.dataset.src) {
-        imgObserver.observe(img);
+      } catch (err) {
+        setError('An error occurred while fetching posts.');
+        setPosts([]);
+      } finally {
+        setLoading(false);
       }
-    });
-    return () => imgObserver.disconnect();
-  }, [posts]);
+    };
+    if (user && user.id) fetchPosts();
+  }, [user]);
 
-  // Memoize posts to avoid unnecessary re-renders
-  const memoizedPosts = useMemo(() => posts, [posts]);
-
-  const handleDelete = async (postId: number) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
-    setLoading(true);
-    try {
-      await postsApi.deletePost(postId);
-      setPosts(posts => posts.filter(p => p.id !== postId));
-    } finally {
-      setLoading(false);
-    }
+  const handleLike = (postId: number) => {
+    setLiked(prev => ({ ...prev, [postId]: !prev[postId] }));
+    setLikeCounts(prev => ({
+      ...prev,
+      [postId]: prev[postId] + (liked[postId] ? -1 : 1)
+    }));
   };
 
-  const handleEdit = (post: Post) => {
-    setEditingPostId(post.id);
-    setEditTitle(post.title);
-    setEditContent(post.content);
-    setEditVisibility(post.visibility || 'Public');
-  };
-
-  const handleLike = async (postId: number) => {
-    setLikeLoading(postId);
-    try {
-      await postsApi.likePost(postId);
-      setLikedPosts(prev => ({ ...prev, [postId]: true }));
-      setPosts(posts => posts.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
-    } finally {
-      setLikeLoading(null);
-    }
-  };
-  const handleShare = (postId: number) => {
-    setSharePopupId(postId);
-    setCopiedId(null);
-  };
-  const handleCopyLink = (postId: number) => {
-    const url = `${window.location.origin}/posts/${postId}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(postId);
-  };
-  const handleCloseShare = () => {
-    setSharePopupId(null);
-    setCopiedId(null);
-  };
   const handleCommentInput = (postId: number, value: string) => {
-    setCommentInputs(inputs => ({ ...inputs, [postId]: value }));
-  };
-  const handleAddComment = (postId: number) => {
-    const text = commentInputs[postId]?.trim();
-    if (!text) return;
-    setComments(c => ({ ...c, [postId]: [...(c[postId] || []), text] }));
-    setCommentInputs(inputs => ({ ...inputs, [postId]: '' }));
-  };
-  const handleMenuToggle = (postId: number) => {
-    setMenuOpenId(menuOpenId === postId ? null : postId);
+    setCommentInputs(prev => ({ ...prev, [postId]: value }));
   };
 
-  if (error) {
-    return <div className="text-center text-red-600 py-8">{error}</div>;
-  }
+  const handleAddComment = (postId: number) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+    const newComment: LocalComment = {
+      postId,
+      username: user?.username || 'You',
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    setComments(prev => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), newComment],
+    }));
+    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const handleShare = (postId: number) => {
+    setSharePostId(postId);
+    setCopied(false);
+  };
+
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (error) return <div className="text-center text-red-600 py-8">{error}</div>;
+  if (!posts.length) return <div className="text-center text-gray-600 py-8">No posts found.</div>;
 
   return (
-    <PostListErrorBoundary>
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
-          <input
-            type="text"
-            placeholder="Search posts..."
-            value={search}
-            onChange={handleSearch}
-            className="border px-3 py-2 rounded w-full md:w-64"
-          />
-          <div className="flex gap-2 mt-2 md:mt-0 items-center">
-            <Link
-              to="/dashboard/create-post"
-              className="bg-blue-600 text-white px-4 py-2 rounded font-semibold shadow hover:bg-blue-800"
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Image Preview Modal */}
+      {previewImg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setPreviewImg(null)}>
+          <img src={previewImg} alt="Preview" className="max-h-[80vh] max-w-[90vw] rounded-lg shadow-lg border-4 border-white" onClick={e => e.stopPropagation()} />
+          <button onClick={() => setPreviewImg(null)} className="absolute top-4 right-4 text-white text-3xl font-bold">&times;</button>
+        </div>
+      )}
+      {/* Share Modal */}
+      {sharePostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={() => setSharePostId(null)}>
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSharePostId(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+            <div className="mb-2 font-bold text-lg">Share Post</div>
+            <div className="mb-4 text-gray-700 break-all">
+              {`${window.location.origin}/posts/${sharePostId}`}
+            </div>
+            <button
+              className="px-4 py-2 bg-cyan-500 text-white rounded font-semibold"
+              onClick={() => handleCopy(`${window.location.origin}/posts/${sharePostId}`)}
             >
-              + Create Post
-            </Link>
-            <label className="flex items-center gap-1">
-              <span className="font-semibold">Time:</span>
-              <select
-                value={sort}
-                onChange={e => setSort(e.target.value as 'newest' | 'oldest')}
-                className="border px-2 py-1 rounded"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </label>
-            <label className="flex items-center gap-1">
-              <span className="font-semibold">Type:</span>
-              <select
-                value={mediaType}
-                onChange={e => { setMediaType(e.target.value); setPage(1); }}
-                className="border px-2 py-1 rounded"
-              >
-                {MEDIA_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </label>
-            <label className="flex items-center gap-1">
-              <span className="font-semibold">Visibility:</span>
-              <select
-                value={visibilityFilter}
-                onChange={e => { setVisibilityFilter(e.target.value); setPage(1); }}
-                className="border px-2 py-1 rounded"
-              >
-                {VISIBILITY_OPTIONS.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </label>
+              {copied ? 'Copied!' : 'Copy URL'}
+            </button>
           </div>
         </div>
-        {/* Removed category, visibility, and tag select buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-            : memoizedPosts.map((post: Post, idx: number) => (
-                <div
-                  key={post.id}
-                  className="bg-white rounded-lg shadow p-4 flex flex-col h-full transition hover:shadow-lg"
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {posts.map(post => (
+          <div key={post.id} className="bg-white rounded-lg shadow p-4 flex flex-col h-full transition hover:shadow-lg">
+            <div className="flex items-center mb-2 justify-between">
+              <span className="font-bold text-black mr-2">{post.username || 'User'}</span>
+            </div>
+            <div className="font-semibold text-lg text-black mb-1">{post.title}</div>
+            <div className="text-gray-700 mb-2">{post.content}</div>
+            {post.media_url && post.media_url.match(/\.(jpg|jpeg|png|gif)$/i) && (
+              <img
+                src={post.media_url}
+                alt="media"
+                className="rounded-lg mb-2 max-h-64 object-cover cursor-pointer border border-gray-200 hover:border-cyan-400"
+                onClick={() => setPreviewImg(post.media_url!)}
+              />
+            )}
+            {post.media_url && post.media_url.match(/\.(mp4|mov|avi|webm)$/i) && (
+              <video src={post.media_url} controls className="rounded-lg mb-2 max-h-64 w-full" />
+            )}
+            <div className="flex items-center text-gray-500 text-sm mt-2">
+              <span>{new Date(post.created_at).toLocaleString()}</span>
+            </div>
+            <div className="flex gap-4 mt-4">
+              <button
+                className={`flex items-center gap-1 transition-colors ${liked[post.id] ? 'text-red-500' : 'text-gray-600 hover:text-cyan-500'}`}
+                onClick={() => handleLike(post.id)}
+              >
+                {liked[post.id] ? <FaHeart /> : <FaRegHeart />} {likeCounts[post.id] || 0} Like
+              </button>
+              <button
+                className="flex items-center gap-1 text-gray-600 hover:text-cyan-500 transition-colors"
+                onClick={() => setShowCommentBox(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+              >
+                <FaRegComment /> Comment
+              </button>
+              <button
+                className="flex items-center gap-1 text-gray-600 hover:text-cyan-500 transition-colors"
+                onClick={() => handleShare(post.id)}
+              >
+                <FaShareAlt /> Share
+              </button>
+            </div>
+            {/* Comment Box */}
+            {showCommentBox[post.id] && (
+              <div className="mt-4">
+                <input
+                  type="text"
+                  value={commentInputs[post.id] || ''}
+                  onChange={e => handleCommentInput(post.id, e.target.value)}
+                  placeholder="Add a comment..."
+                  className="border px-3 py-2 rounded w-full mb-2"
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddComment(post.id); }}
+                />
+                <button
+                  className="px-3 py-1 bg-cyan-500 text-white rounded font-semibold"
+                  onClick={() => handleAddComment(post.id)}
                 >
-                  <div className="flex items-center mb-2 justify-between">
-                    <span className="font-bold text-blue-700 mr-2">{post.username || 'User'}</span>
-                    <div className="relative">
-                      <button
-                        className="p-2 rounded-full hover:bg-gray-200"
-                        onClick={() => handleMenuToggle(post.id)}
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {menuOpenId === post.id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-                          <button
-                            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleEdit(post)}
-                            disabled={editingPostId === post.id}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                            onClick={() => handleDelete(post.id)}
-                            disabled={editingPostId === post.id}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                  Post
+                </button>
+                {/* Show comments */}
+                <div className="mt-4 space-y-2">
+                  {(comments[post.id] || []).map((c, i) => (
+                    <div key={i} className="bg-gray-100 rounded p-2 text-sm">
+                      <span className="font-semibold text-black mr-2">{c.username}:</span>
+                      <span>{c.content}</span>
+                      <span className="ml-2 text-gray-400 text-xs">{new Date(c.createdAt).toLocaleString()}</span>
                     </div>
-                  </div>
-                  {post.title && (
-                    editingPostId === post.id ? (
-                      <>
-                        <input
-                          className="font-semibold text-lg mb-1 border rounded px-2 py-1 w-full"
-                          value={editTitle}
-                          onChange={e => setEditTitle(e.target.value)}
-                          disabled={false}
-                        />
-                        <div className="flex gap-2 text-xs text-gray-500 mb-1">
-                          <select
-                            className="border rounded px-2 py-1"
-                            value={editVisibility}
-                            onChange={e => setEditVisibility(e.target.value)}
-                            disabled={false}
-                          >
-                            <option value="Public">Public</option>
-                            <option value="Private">Private</option>
-                          </select>
-                        </div>
-                      </>
-                    ) : (
-                      <Link to={`/posts/${post.id}`} className="font-semibold text-lg mb-1 text-blue-700 hover:underline">
-                        {post.title}
-                      </Link>
-                    )
-                  )}
-                  {/* Category & Visibility */}
-                  <div className="flex gap-2 text-xs text-gray-500 mb-1">
-                    {post.category && <span className="bg-gray-100 px-2 py-0.5 rounded">{post.category}</span>}
-                    {post.visibility && <span className="bg-gray-200 px-2 py-0.5 rounded">{post.visibility}</span>}
-                  </div>
-                  <div className="mb-2 text-gray-800">
-                    {editingPostId === post.id ? (
-                      <textarea
-                        className="w-full border rounded px-2 py-1"
-                        value={editContent}
-                        onChange={e => setEditContent(e.target.value)}
-                        rows={4}
-                        disabled={false}
-                      />
-                    ) : (
-                      <div dangerouslySetInnerHTML={{ __html: post.content }} />
-                    )}
-                  </div>
-                  {post.media_url && (
-                    <div className="mt-2">
-                      {post.media_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                        <img
-                          ref={el => imageRefs.current[idx] = el}
-                          data-src={post.media_url}
-                          alt="Post Media"
-                          className="max-h-60 rounded w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <video
-                          src={post.media_url}
-                          controls
-                          className="max-h-60 rounded w-full"
-                          preload="none"
-                        />
-                      )}
-                    </div>
-                  )}
-                  <div className="flex gap-4 mt-4 items-center">
-                    <button
-                      className={`flex items-center gap-1 ${likedPosts[post.id] ? 'text-red-600' : 'text-gray-600'} font-semibold`}
-                      onClick={() => handleLike(post.id)}
-                      disabled={likeLoading === post.id}
-                    >
-                      {likedPosts[post.id] ? <FaHeart /> : <FaRegHeart />} {post.likes_count || 0}
-                    </button>
-                  </div>
-                  {/* Comments UI */}
-                  <div className="mt-2 relative">
-                    <input
-                      id={`comment-input-${post.id}`}
-                      className="w-full border rounded px-2 py-1 mb-1"
-                      placeholder="Add a comment..."
-                      value={commentInputs[post.id] || ''}
-                      onChange={e => handleCommentInput(post.id, e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleAddComment(post.id); }}
-                    />
-                    <button
-                      className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
-                      onClick={() => handleAddComment(post.id)}
-                    >
-                      Add
-                    </button>
-                    <div className="mt-1 space-y-1">
-                      {(comments[post.id] || []).map((c, i) => (
-                        <div key={i} className="text-sm text-gray-700 bg-gray-100 rounded px-2 py-1">{c}</div>
-                      ))}
-                    </div>
-                    {/* Share button at bottom right */}
-                    <button
-                      className="absolute bottom-2 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full flex items-center gap-1 shadow"
-                      onClick={() => handleShare(post.id)}
-                    >
-                      <FaShareAlt /> Share
-                    </button>
-                    {/* Share popup */}
-                    {sharePopupId === post.id && (
-                      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-                        <div className="bg-white rounded-lg shadow-lg p-6 w-80 relative">
-                          <button
-                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
-                            onClick={handleCloseShare}
-                          >
-                            ×
-                          </button>
-                          <div className="mb-4 font-semibold text-lg">Share this post</div>
-                          <div className="mb-2 text-sm text-gray-700 break-all border rounded px-2 py-1 bg-gray-100">
-                            {`${window.location.origin}/posts/${post.id}`}
-                          </div>
-                          <button
-                            className="bg-blue-600 text-white px-4 py-2 rounded font-semibold w-full"
-                            onClick={() => handleCopyLink(post.id)}
-                          >
-                            {copiedId === post.id ? 'Copied!' : 'Copy Link'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-        </div>
-        {loading && <div className="text-center py-4">Loading...</div>}
-        {!loading && !posts.length && (
-          <div className="text-center text-gray-600 py-8">No posts found.</div>
-        )}
-        {!loading && hasMore && (
-          <div className="text-center py-4 text-gray-400">Scroll to load more...</div>
-        )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-    </PostListErrorBoundary>
+    </div>
   );
 };
 

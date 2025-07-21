@@ -29,7 +29,7 @@ const Login: React.FC = () => {
       
       if (result.success) {
         setSuccess('Login successful! Redirecting...');
-        setTimeout(() => navigate('/'), 1000);
+        navigate('/');
       } else {
         setError(result.message || 'Login failed');
       }
@@ -42,17 +42,17 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f0f9ff' }}>
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg border border-gray-200">
         <div className="flex flex-col items-center mb-4">
-          <span className="text-4xl font-extrabold text-blue-700 tracking-tight mb-2">prok</span>
+          <span className="text-4xl font-extrabold tracking-tight mb-2" style={{ color: '#09D0EF' }}>prok</span>
           <span className="text-lg text-gray-600 font-semibold">Sign in to your account</span>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <input
               type="text"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-colors"
               placeholder="Username or Email"
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
@@ -60,7 +60,7 @@ const Login: React.FC = () => {
             />
             <input
               type="password"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-colors"
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -71,15 +71,16 @@ const Login: React.FC = () => {
           {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-700 text-white rounded hover:bg-blue-800 transition font-semibold text-lg"
+            className="w-full py-3 px-4 text-white rounded-lg hover:shadow-lg transition-all font-semibold text-lg"
+            style={{ backgroundColor: '#09D0EF' }}
             disabled={loading}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <div className="text-center mt-4">
-          <span>Don't have an account? </span>
-          <Link to="/signup" className="text-blue-700 hover:underline font-semibold">Sign up</Link>
+          <span className="text-gray-600">Don't have an account? </span>
+          <Link to="/signup" className="font-semibold hover:underline transition-colors" style={{ color: '#09D0EF' }}>Sign up</Link>
         </div>
       </div>
     </div>

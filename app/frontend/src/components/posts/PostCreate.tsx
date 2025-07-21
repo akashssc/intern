@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useNavigate } from 'react-router-dom';
+import PersistentNav from '../navigation/PersistentNav';
 
 const DRAFT_KEY = 'post_draft';
 
@@ -61,9 +62,10 @@ const PostCreate: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Create Post</h2>
+    <PersistentNav>
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold mb-4 text-black">Create Post</h2>
         <form className="space-y-6" onSubmit={handlePreview}>
           {/* Title */}
           <div>
@@ -77,17 +79,7 @@ const PostCreate: React.FC = () => {
             />
           </div>
           {/* Visibility */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Visibility</label>
-            <select
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-              value={visibility}
-              onChange={e => setVisibility(e.target.value)}
-            >
-              <option value="Public">Public</option>
-              <option value="Private">Private</option>
-            </select>
-          </div>
+          {/* Removed visibility select */}
           {/* Content */}
           <div>
             <label className="block text-sm font-medium mb-1">Content</label>
@@ -121,14 +113,15 @@ const PostCreate: React.FC = () => {
           <div className="flex space-x-4">
             <button
               type="button"
-              className="w-1/2 bg-gray-400 text-white py-2 rounded font-semibold"
+              className="w-1/2 text-white py-2 rounded font-semibold transition-colors bg-gray-500 hover:bg-gray-600"
               onClick={handleCancel}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="w-1/2 bg-blue-600 text-white py-2 rounded font-semibold"
+              className="w-1/2 text-black py-2 rounded font-semibold transition-colors"
+              style={{ backgroundColor: '#09D0EF' }}
             >
               Preview
             </button>
@@ -136,6 +129,7 @@ const PostCreate: React.FC = () => {
         </form>
       </div>
     </div>
+    </PersistentNav>
   );
 };
 
