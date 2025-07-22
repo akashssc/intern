@@ -77,8 +77,5 @@ def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
-    # Setup database tables
-    # setup_database() # This line is removed as per the new_code, as db.create_all() is now called directly.
-    
-    # Run the app
-    app.run(debug=True) 
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port) 
