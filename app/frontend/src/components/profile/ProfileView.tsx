@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useLocation as useRouterLocation } from 'react-router-dom';
 import PersistentNav from '../navigation/PersistentNav';
 
 const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
@@ -22,10 +22,17 @@ const ProfileView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [cachedProfile, setCachedProfile] = useState<any>(null);
+  const routerLocation = useRouterLocation();
 
   useEffect(() => {
     refreshProfile(); // Always fetch the latest profile from the backend on mount
   }, []);
+
+  useEffect(() => {
+    if (routerLocation.state && routerLocation.state.refresh) {
+      refreshProfile();
+    }
+  }, [routerLocation.state]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);

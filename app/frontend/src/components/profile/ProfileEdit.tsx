@@ -160,7 +160,7 @@ const ProfileEdit: React.FC = () => {
         await refreshProfile();
         setTimeout(() => {
           setShowPopup(false);
-          navigate('/dashboard/profile');
+          navigate('/dashboard/profile', { state: { refresh: true } });
         }, 1500);
       } else {
         // Check if it's a token expiration error
