@@ -217,22 +217,33 @@ const ProfileView: React.FC = () => {
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <CollapsibleSection title="Bio & Skills">
-              <div className="mb-2">{bio || <span className="text-gray-400">Empty</span>}</div>
+              <div className="mb-2">{bio ? bio : <span className="text-gray-400">Empty</span>}</div>
               <div className="flex flex-wrap gap-2">
-                {/* Skills are not directly available in the profile object, so this will be empty */}
-                <span className="text-gray-400">Empty</span>
+                {dataToShow.skills && dataToShow.skills.split(',').filter((s: string) => s.trim()).length > 0 ? (
+                  dataToShow.skills.split(',').map((skill: string, i: number) => (
+                    <span key={i} className="bg-gray-200 px-2 py-0.5 rounded text-sm text-black">{skill.trim()}</span>
+                  ))
+                ) : (
+                  <span className="text-gray-400">Empty</span>
+                )}
               </div>
             </CollapsibleSection>
             <CollapsibleSection title="Work Experience">
-              {/* Experience is not directly available in the profile object, so this will be empty */}
-              <span className="text-gray-400">Empty</span>
+              {dataToShow.experience ? (
+                <div>{dataToShow.experience}</div>
+              ) : (
+                <span className="text-gray-400">Empty</span>
+              )}
             </CollapsibleSection>
             <CollapsibleSection title="Education">
-              {/* Education is not directly available in the profile object, so this will be empty */}
-              <span className="text-gray-400">Empty</span>
+              {dataToShow.education ? (
+                <div>{dataToShow.education}</div>
+              ) : (
+                <span className="text-gray-400">Empty</span>
+              )}
             </CollapsibleSection>
             <CollapsibleSection title="Contact Information">
-              <div>Email: {email || <span className="text-gray-400">Empty</span>}</div>
+              <div>Email: {email ? email : <span className="text-gray-400">Empty</span>}</div>
               <div>Phone: {phone ? phone : <span className="text-gray-400">Empty</span>}</div>
               <div>LinkedIn: {linkedin ? <a href={linkedin} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">{linkedin}</a> : <span className="text-gray-400">Empty</span>}</div>
               <div>GitHub: {github ? <a href={github} target="_blank" rel="noopener noreferrer" className="text-black hover:underline">{github}</a> : <span className="text-gray-400">Empty</span>}</div>
@@ -241,9 +252,8 @@ const ProfileView: React.FC = () => {
           </div>
           <div>
             <CollapsibleSection title="Activity Timeline">
-              {normalizedActivity.length ? normalizedActivity.map((act: string, i: number) => (
+              {Array.isArray(activity) && activity.length ? activity.map((act: string, i: number) => (
                 <div key={i} className="mb-2">
-                  <div className="text-xs text-gray-500">{/* Date is not available in the profile object, so this will be empty */}</div>
                   <div className="text-gray-800">{act}</div>
                 </div>
               )) : <span className="text-gray-400">No recent activity</span>}
