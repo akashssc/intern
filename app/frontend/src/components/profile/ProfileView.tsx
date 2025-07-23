@@ -169,13 +169,6 @@ const ProfileView: React.FC = () => {
     );
   }
 
-  // Normalize fields for display
-  const normalizedActivity = Array.isArray(activity)
-    ? activity
-    : (typeof activity === 'string' && activity)
-      ? activity.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
-
   return (
     <PersistentNav>
       <div className="max-w-4xl mx-auto p-4">
