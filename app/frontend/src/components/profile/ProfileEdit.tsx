@@ -204,7 +204,7 @@ const ProfileEdit: React.FC = () => {
             <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold text-black overflow-hidden" style={{ backgroundColor: '#09D0EF' }}>
               {typeof avatar === 'string' && avatar ? (
                 <img 
-                  src={`${window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://intern-3ypr.onrender.com' : 'http://localhost:5000'}/uploads/${avatar}`}
+                  src={`${window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://prok-backend-66jc.onrender.com' : 'http://localhost:5000'}/uploads/${avatar}?t=${Date.now()}`}
                   alt="avatar" 
                   className="w-full h-full object-cover" 
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
