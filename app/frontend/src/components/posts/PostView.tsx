@@ -69,7 +69,7 @@ const PostView: React.FC = () => {
     if (!post) return;
     setEditLoading(true);
     try {
-      const updated = await postsApi.editPost(post.id, { title: editTitle, content: editContent, visibility: editVisibility });
+      const updated = await postsApi.editPost(post.id, { title: editTitle, content: editContent });
       setPost({ ...post, title: updated.title, content: updated.content, visibility: updated.visibility });
       setEditing(false);
     } finally {
