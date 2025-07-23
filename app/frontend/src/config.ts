@@ -5,7 +5,7 @@ const getApiUrl = () => {
   
   if (isProduction) {
     // In production, always use the deployed backend
-    return 'https://intern-3ypr.onrender.com';
+    return 'https://prok-backend-66jc.onrender.com';
   }
   
   // In development, use localhost

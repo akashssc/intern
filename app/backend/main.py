@@ -25,7 +25,7 @@ app.config['JWT_SECRET_KEY'] = 'super-secret-key'  # Change this in production!
 
 # Initialize extensions
 # Get allowed origins from environment variable or use defaults
-allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173,https://intern-frontend.onrender.com').split(',')
+allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173,https://intern-frontend.onrender.com,https://intern-3ypr.onrender.com,https://prok-frontend-06vb.onrender.com').split(',')
 CORS(app, origins=allowed_origins, supports_credentials=True)
 jwt = JWTManager(app)
 # Initialize limiter after app creation
