@@ -80,9 +80,9 @@ const ProfileView: React.FC = () => {
   const location = profile?.location || 'Insert Location';
   const bio = profile?.bio || 'Insert Bio';
   const phone = profile?.phone || '';
-  const linkedin = profile && (profile as any).social ? (profile as any).social.linkedin : '';
-  const github = profile && (profile as any).social ? (profile as any).social.github : '';
-  const twitter = profile && (profile as any).social ? (profile as any).social.twitter : '';
+  const linkedin = profile?.linkedin || '';
+  const github = profile?.github || '';
+  const twitter = profile?.twitter || '';
 
   const connections = profile && 'connections' in profile ? (profile as any).connections : 0;
   const mutualConnections = profile && 'mutualConnections' in profile ? (profile as any).mutualConnections : 0;
